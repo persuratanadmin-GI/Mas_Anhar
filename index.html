@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Hasil Uji PMS</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f6f9;--card:#fff;--tx:#14213d;--mut:#5b6b82;--bd:#d8dee8;--pri:#0b6bb5;--pri-tx:#fff;--ok:#12805c;--bad:#c0392b;--in:#fbfcfe;--hd:#e9f1f9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1620;--card:#18222f;--tx:#e8eef6;--mut:#9fb0c5;--bd:#2c3a4d;--pri:#4aa3e8;--pri-tx:#06121f;--ok:#43c59e;--bad:#ff7b6b;--in:#121b27;--hd:#1f2d3f}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1620;--card:#18222f;--tx:#e8eef6;--mut:#9fb0c5;--bd:#2c3a4d;--pri:#4aa3e8;--pri-tx:#06121f;--ok:#43c59e;--bad:#ff7b6b;--in:#121b27;--hd:#1f2d3f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 "Segoe UI",system-ui,Arial,sans-serif}
+header{background:var(--pri);color:var(--pri-tx);padding:14px 20px}
+header h1{margin:0;font-size:18px}header p{margin:2px 0 0;font-size:12.5px;opacity:.9}
+main{max-width:1200px;margin:0 auto;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat,.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.stat b{display:block;font-size:26px}.stat span{color:var(--mut);font-size:12.5px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input[type=search]{flex:1;min-width:180px}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;cursor:pointer}
+button.p{background:var(--pri);color:var(--pri-tx);border-color:var(--pri);font-weight:600}
+button.d{color:var(--bad)}button:disabled{opacity:.5}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--in);border:1px solid var(--bd);border-radius:6px;padding:7px 9px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--bd);padding:4px 6px;text-align:left;vertical-align:middle}
+th{background:var(--hd);font-size:12px;text-align:center}
+.list td{padding:9px 10px}.list tr.r{cursor:pointer}.list tr.r:hover{background:var(--hd)}
+.m td.n{min-width:230px;position:sticky;left:0;background:var(--card);z-index:1}
+.m td input{min-width:62px;padding:5px;text-align:center}
+.m td.t input{min-width:90px}.m td.k select{min-width:110px}
+.grp{margin:18px 0 6px;font-weight:700}.ref{font-weight:400;color:var(--mut);font-size:12.5px}
+.msg{padding:10px 12px;border-radius:8px;background:var(--hd);margin-bottom:12px;font-size:13px}
+.tag{padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid var(--bd)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bd);margin-top:16px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}.tabs button small{opacity:.75;margin-left:4px}
+.lite .x{display:none}
+#print{display:none}
+@media print{
+ #app,header{display:none!important}#print{display:block}
+ body{background:#fff;color:#000;font-size:10px}
+ #print table{font-size:9.5px}#print th,#print td{border:1px solid #000;color:#000;background:#fff;padding:2px 4px}
+ #print th{background:#eee}
+ @page{size:A4 landscape;margin:10mm}
+}
+</style>
+</head>
+<body>
+<header><h1>Hasil Uji PMS Bus A</h1><p>PT PLN (Persero) UIP3B Sulawesi · UPT Makassar · Lembar Hasil Pemeliharaan Pengujian / Pengukuran PMS</p></header>
+<main id="app"></main>
+<div id="print"></div>
+
+<script src="config.js"></script>
+<script>
+"use strict";
+/* ---------- Definisi baris (mengikuti sheet G.1.b) ---------- */
+const GROUPS=[
+ {g:"A",t:"TAHANAN PENTANAHAN*",ref:"Acuan: R < 1 Ω (kondisi pentanahan terlepas dari struktur)",items:[
+  {id:"a1",l:"Tahanan pentanahan grounding PMS (Ω)"},{id:"a2",l:"Tahanan pentanahan PMS tanah (Ω)"}]},
+ {g:"B",t:"TAHANAN KONTAK*",ref:"Acuan: R ≤ 120 % nilai pabrikan atau nilai pengujian FAT / komisioning · *PMS Rel kondisional",items:[
+  {id:"b1",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b2",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"200 A"},
+  {id:"b3",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b4",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"200 A"}]},
+ {g:"C",t:"TAHANAN ISOLASI*",ref:"Acuan: 1 MΩ/1 kV",items:[{id:"c1",l:"Terminal utama – body (base plate) (MΩ)"}]},
+ {g:"D",t:"TEGANGAN AC/DC*",ref:"Acuan: 85 % < Vn < 110 % · IEC std 56-2 klausal 17",items:[
+  {id:"d1",l:"a. Tegangan AC di MCB lemari kontrol PMS (V)"},{id:"d2",l:"b. Tegangan DC di terminal lemari kontrol PMS (V)"}]},
+ {g:"E",t:"PENGUKURAN MOTOR PENGGERAK PMS*",ref:"",items:[
+  {id:"e1",l:"a. Arus running motor penggerak (A)"},{id:"e2",l:"b. Pengukuran waktu buka PMS (ms)"},{id:"e3",l:"c. Pengukuran waktu tutup PMS (ms)"}]}
+];
+const ALL=GROUPS.flatMap(g=>g.items.map(i=>({...i,g:g.g})));
+const HEAD=[["ultg","ULTG*"],["gi","Lokasi GI*"],["bay","Bay*"],["tanggal","Tanggal pekerjaan*"],["nodok","No. Dokumen"],["tgldok","Tanggal dokumen"],
+ ["merk","Merk"],["tipe","Type"],["tegnom","Teg. Nom"],["thnbuat","Thn Buat"],["thnop","Thn Operasi"],["seri","No. Seri (R/S/T)"]];
+const KES=["","Baik","Tidak baik"];
+
+/* ---------- Util ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const blank=()=>({id:uid(),ultg:"PAREPARE",gi:"",bay:"",tanggal:"",nodok:"",tgldok:"",merk:"",tipe:"",tegnom:"",thnbuat:"",thnop:"",seri:"",
+ vals:{},catatan:"",mgr:"SAMSU ALAM",pengawas:"ANHAR FITRA NUR",pelaksana:"MUARIS",updated:Date.now()});
+const cell=(r,id)=>(r.vals[id]||(r.vals[id]={prev:["","",""],awal:["","",""],tind:"",akhir:["","",""],kes:""}));
+
+/* ---------- Penyimpanan: Supabase (online) atau localStorage (cadangan) ---------- */
+let reports=[],cur=null,view="list",q="",loaded=false,note="",tab="A",showAll=false;
+const TABN={A:"Tahanan Pentanahan",B:"Tahanan Kontak",C:"Tahanan Isolasi",D:"Tegangan AC/DC",E:"Motor Penggerak PMS"};
+const CFG=window.APP_CONFIG||{};
+const T=CFG.table||"pms_hasil_uji";
+const useSB=!!(CFG.supabaseUrl&&CFG.supabaseKey);
+const sbH=()=>({apikey:CFG.supabaseKey,Authorization:"Bearer "+CFG.supabaseKey,"Content-Type":"application/json"});
+const sbUrl=p=>CFG.supabaseUrl.replace(/\/$/,"")+"/rest/v1/"+T+p;
+const LS="pms_hasil_uji_local";
+const lsGet=()=>{try{return JSON.parse(localStorage.getItem(LS)||"[]")}catch(e){return []}};
+const sortR=a=>a.sort((x,y)=>(y.updated||0)-(x.updated||0));
+async function loadAll(){
+  if(useSB){const r=await fetch(sbUrl("?select=id,data&order=updated.desc"),{headers:sbH()});
+    if(!r.ok)throw new Error("Supabase "+r.status);
+    reports=(await r.json()).map(x=>({...x.data,id:x.id}));}
+  else reports=sortR(lsGet());
+}
+async function initDb(){
+  note=useSB?"":"Mode lokal: data hanya tersimpan di browser ini. Isi config.js dengan Supabase agar tersimpan online.";
+  try{await loadAll();}catch(e){note="Gagal membaca data: "+(e.message||e);}
+  loaded=true;render();
+  if(useSB)setInterval(async()=>{if(view==="form")return;try{await loadAll();if(view==="detail"){const n=reports.find(x=>x.id===cur.id);if(n)cur=n;}render();}catch(e){}},15000);
+}
+async function save(r){
+  r.updated=Date.now();
+  if(useSB){const x=await fetch(sbUrl(""),{method:"POST",headers:{...sbH(),Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:r.id,data:r,updated:r.updated})});
+    if(!x.ok)throw new Error("Supabase "+x.status+" "+await x.text());}
+  else{const l=lsGet(),i=l.findIndex(z=>z.id===r.id);i>=0?l[i]=r:l.push(r);localStorage.setItem(LS,JSON.stringify(l));}
+  await loadAll();
+}
+async function remove(id){
+  if(useSB){const x=await fetch(sbUrl("?id=eq."+encodeURIComponent(id)),{method:"DELETE",headers:sbH()});if(!x.ok)throw new Error("Supabase "+x.status);}
+  else localStorage.setItem(LS,JSON.stringify(lsGet().filter(z=>z.id!==id)));
+  await loadAll();
+}
+
+/* ---------- Tampilan daftar ---------- */
+function renderList(){
+  const f=reports.filter(r=>!q||[r.gi,r.bay,r.tanggal,r.nodok].join(" ").toLowerCase().includes(q.toLowerCase()));
+  const gis=new Set(reports.map(r=>r.gi).filter(Boolean)).size;
+  const bln=new Date().toISOString().slice(0,7);
+  const thisM=reports.filter(r=>new Date(r.updated||0).toISOString().slice(0,7)===bln).length;
+  const tdk=reports.filter(r=>Object.values(r.vals||{}).some(v=>v.kes==="Tidak baik")).length;
+  $("#app").innerHTML=`${note?`<div class="msg">${esc(note)}</div>`:""}
+  <div class="stats"><div class="stat"><b>${reports.length}</b><span>Total laporan</span></div><div class="stat"><b>${gis}</b><span>Gardu Induk</span></div>
+  <div class="stat"><b>${thisM}</b><span>Diperbarui bulan ini</span></div><div class="stat"><b class="${tdk?"bad":""}">${tdk}</b><span>Ada temuan "Tidak baik"</span></div></div>
+  <div class="bar"><input type="search" id="q" placeholder="Cari GI, bay, tanggal, no. dokumen…" value="${esc(q)}"><button class="p" id="new">+ Input Hasil Uji Baru</button><button id="csv">Ekspor CSV</button></div>
+  <div class="card scroll"><table class="list"><thead><tr><th>Tanggal</th><th>Lokasi GI</th><th>Bay</th><th>No. Dokumen</th><th>Status</th><th></th></tr></thead><tbody>
+  ${!loaded?`<tr><td colspan="6">Memuat data…</td></tr>`:f.length?f.map(r=>{const n=ALL.filter(i=>r.vals?.[i.id]&&(r.vals[i.id].akhir.some(Boolean)||r.vals[i.id].awal.some(Boolean))).length;
+   const bad=Object.values(r.vals||{}).some(v=>v.kes==="Tidak baik");
+   return `<tr class="r" data-id="${esc(r.id)}"><td>${esc(r.tanggal)}</td><td>${esc(r.gi)}</td><td>${esc(r.bay)}</td><td>${esc(r.nodok)}</td>
+   <td><span class="tag ${bad?"bad":"ok"}">${bad?"Ada temuan":"Terisi "+n+"/"+ALL.length}</span></td><td><button data-print="${esc(r.id)}">Cetak</button></td></tr>`}).join(""):`<tr><td colspan="6">Belum ada data. Klik “Input Hasil Uji Baru”.</td></tr>`}
+  </tbody></table></div>`;
+  $("#q").oninput=e=>{q=e.target.value;const p=e.target.selectionStart;renderList();const n=$("#q");n.focus();n.setSelectionRange(p,p);};
+  $("#new").onclick=()=>{cur=blank();view="form";render();};
+  $("#csv").onclick=exportCsv;
+  document.querySelectorAll("tr.r").forEach(tr=>tr.onclick=e=>{if(e.target.closest("button"))return;cur=structuredClone(reports.find(r=>r.id===tr.dataset.id));view="detail";render();});
+  document.querySelectorAll("[data-print]").forEach(b=>b.onclick=()=>doPrint(reports.find(r=>r.id===b.dataset.print)));
+}
+
+/* ---------- Tampilan form ---------- */
+function renderForm(){
+  const r=cur;
+  const inp=(a,b,k,i)=>`<td${k==="akhir"?"":' class="x"'}><input inputmode="decimal" data-id="${a}" data-k="${k}" data-i="${i}" value="${esc(cell(r,a)[k][i])}"></td>`;
+  $("#app").innerHTML=`<div class="bar"><button id="back">← Daftar</button><b>${reports.some(x=>x.id===r.id)?"Edit":"Input baru"} hasil uji</b></div>
+  <div class="card"><div class="grid">${HEAD.map(([k,l])=>`<div><label>${l}</label><input data-h="${k}" value="${esc(r[k])}"></div>`).join("")}</div></div>
+  ${tabsHtml()}${GROUPS.filter(g=>g.g===tab).map(g=>`<div class="grp">${g.g}. ${g.t} <span class="ref">${esc(g.ref)}</span></div>
+  <div class="card scroll" style="padding:0"><table class="m ${showAll?"":"lite"}"><thead><tr><th rowspan="2">Titik ukur</th><th colspan="3" class="x">Hasil sebelumnya</th><th colspan="3" class="x">Kondisi awal</th><th rowspan="2" class="x">Tindakan</th><th colspan="3">Nilai akhir</th><th rowspan="2">Kesimpulan</th></tr>
+  <tr>${"RSTRSTRST".split("").map((x,j)=>`<th class="${j<6?"x":""}">${x}</th>`).join("")}</tr></thead><tbody>
+  ${g.items.map(i=>`<tr><td class="n">${esc(i.l)}${i.n?` <b>(${i.n})</b>`:""}</td>${[0,1,2].map(x=>inp(i.id,0,"prev",x)).join("")}${[0,1,2].map(x=>inp(i.id,0,"awal",x)).join("")}
+  <td class="t x"><input data-id="${i.id}" data-k="tind" value="${esc(cell(r,i.id).tind)}"></td>${[0,1,2].map(x=>inp(i.id,0,"akhir",x)).join("")}
+  <td class="k"><select data-id="${i.id}" data-k="kes">${KES.map(o=>`<option ${cell(r,i.id).kes===o?"selected":""}>${o}</option>`).join("")}</select></td></tr>`).join("")}
+  </tbody></table></div>`).join("")}
+  <div class="grp">CATATAN** <span class="ref">Wajib diisi jika ada kendala pengujian</span></div>
+  <textarea id="cat" rows="4">${esc(r.catatan)}</textarea>
+  <div class="grid" style="margin-top:12px">${[["mgr","Manager ULTG"],["pengawas","Pengawas Pekerjaan"],["pelaksana","Pelaksana Pekerjaan"]].map(([k,l])=>`<div><label>${l}</label><input data-h="${k}" value="${esc(r[k])}"></div>`).join("")}</div>
+  <div class="sticky"><button class="p" id="save2">Simpan nilai</button><button id="save">Simpan & kembali</button><span id="ok" class="ok" style="align-self:center"></span><button id="prt">Cetak / PDF</button><button id="dup">Duplikat</button><button class="d" id="del">Hapus</button></div>`;
+  const a=$("#app");
+  a.oninput=e=>{const t=e.target;
+    if(t.dataset.h)r[t.dataset.h]=t.value;
+    else if(t.id==="cat")r.catatan=t.value;
+    else if(t.dataset.id){const c=cell(r,t.dataset.id);t.dataset.i!==undefined?c[t.dataset.k][+t.dataset.i]=t.value:c[t.dataset.k]=t.value;}};
+  $("#back").onclick=()=>{view="list";render();};
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
+  $("#showall").onchange=e=>{showAll=e.target.checked;render();};
+  $("#save2").onclick=async e=>{
+    if(!r.gi||!r.bay||!r.tanggal){alert("Lengkapi dahulu: Lokasi GI, Bay, dan Tanggal pekerjaan.");return;}
+    e.target.disabled=true;try{await save(r);const o=$("#ok");o.textContent="✓ Tersimpan online "+new Date().toLocaleTimeString("id-ID");}catch(x){alert("Gagal menyimpan: "+(x.message||x));}e.target.disabled=false;};
+  $("#save").onclick=async e=>{
+    if(!r.gi||!r.bay||!r.tanggal){alert("Lengkapi dahulu: Lokasi GI, Bay, dan Tanggal pekerjaan.");return;}
+    e.target.disabled=true;try{await save(r);view="list";render();}catch(x){alert("Gagal menyimpan: "+(x.message||x));e.target.disabled=false;}};
+  $("#prt").onclick=()=>doPrint(r);
+  $("#dup").onclick=()=>{cur={...structuredClone(r),id:uid(),tanggal:"",nodok:""};render();window.scrollTo(0,0);};
+  $("#del").onclick=async()=>{if(!reports.some(x=>x.id===r.id)){view="list";render();return;}if(confirm("Hapus laporan ini secara permanen?")){await remove(r.id);view="list";render();}};
+}
+
+/* ---------- Cetak (tata letak mengikuti lembar Excel) ---------- */
+function doPrint(r){
+  const v=(id,k,i)=>esc(r.vals?.[id]?.[k]?.[i]??"");
+  const rows=GROUPS.map(g=>`<tr><td><b>${g.g}.</b></td><td colspan="2"><b>${g.t}</b></td><td colspan="12">${esc(g.ref.replace("Acuan: ",""))}</td></tr>`+
+   g.items.map(i=>`<tr><td></td><td colspan="2">${esc(i.l)}</td><td>${[0,1,2].map(x=>"").join("")}</td>${[0,1,2].map(x=>`<td>${v(i.id,"prev",x)}</td>`).join("")}${[0,1,2].map(x=>`<td>${v(i.id,"awal",x)}</td>`).join("")}
+   <td>${esc(i.n||r.vals?.[i.id]?.tind||"")}</td>${[0,1,2].map(x=>`<td>${v(i.id,"akhir",x)}</td>`).join("")}<td>${esc(r.vals?.[i.id]?.kes||"")}</td></tr>`).join("")).join("");
+  $("#print").innerHTML=`<div style="text-align:center"><b>PT PLN (PERSERO) UNIT INDUK PEMBANGKITAN DAN PENYALURAN SULAWESI<br>UNIT PELAKSANA TRANSMISI MAKASSAR</b><br><br><b style="font-size:13px">LEMBAR HASIL PEMELIHARAAN<br>PENGUJIAN / PENGUKURAN PMS BUS A</b></div>
+  <p>ULTG: ${esc(r.ultg)} · Lokasi GI: ${esc(r.gi)} · Bay: ${esc(r.bay)} · Tanggal: ${esc(r.tanggal)}<br>Merk: ${esc(r.merk)} · Type: ${esc(r.tipe)} · Teg. Nom: ${esc(r.tegnom)} · Thn Buat: ${esc(r.thnbuat)} · Thn Operasi: ${esc(r.thnop)} · No. Seri: ${esc(r.seri)} · No. Dokumen: ${esc(r.nodok)}</p>
+  <table><thead><tr><th rowspan="2" colspan="3">TITIK UKUR / ACUAN</th><th rowspan="2" style="width:0"></th><th colspan="3">HASIL SEBELUMNYA</th><th colspan="3">KONDISI AWAL</th><th rowspan="2">TINDAKAN</th><th colspan="3">KONDISI AKHIR</th><th rowspan="2">KESIMPULAN</th></tr>
+  <tr>${"RSTRSTRST".split("").map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>
+  <p><b>CATATAN:</b> ${esc(r.catatan).replace(/\n/g,"<br>")}</p>
+  <table style="border:0;margin-top:14px"><tr>${[["Manager ULTG",r.mgr],["Pengawas Pekerjaan",r.pengawas],["Pelaksana Pekerjaan",r.pelaksana]].map(([a,b])=>`<td style="border:0;text-align:center">${a}<br><br><br><br><u>${esc(b)}</u></td>`).join("")}</tr></table>
+  <p style="font-size:9px">*WAJIB DIISI, **WAJIB, JIKA ADA KENDALA PENGUJIAN BERI KETERANGAN PADA CATATAN</p>`;
+  try{window.print();}catch(e){alert("Fungsi cetak tidak tersedia di tampilan ini. Buka halaman di tab baru lalu coba lagi.");}
+}
+
+/* ---------- Ekspor CSV ---------- */
+async function exportCsv(){
+  const hdr=[...HEAD.map(h=>h[1]),"Titik ukur","Sebelumnya R","S","T","Awal R","S","T","Tindakan","Akhir R","S","T","Kesimpulan","Catatan"];
+  const lines=[hdr];
+  reports.forEach(r=>ALL.forEach(i=>{const c=r.vals?.[i.id]||{prev:[],awal:[],akhir:[]};
+    lines.push([...HEAD.map(h=>r[h[0]]),i.l+(i.n?" "+i.n:""),...[0,1,2].map(x=>c.prev?.[x]),...[0,1,2].map(x=>c.awal?.[x]),c.tind||i.n||"",...[0,1,2].map(x=>c.akhir?.[x]),c.kes,r.catatan]);}));
+  const csv="\ufeff"+lines.map(l=>l.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(",")).join("\n");
+  {const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="hasil-uji-pms.csv";a.click();}
+}
+
+const tabsHtml=()=>`<div class="tabs">${GROUPS.map(g=>{const n=g.items.filter(i=>cur.vals?.[i.id]?.akhir?.some(Boolean)).length;return `<button class="${g.g===tab?"p":""}" data-tab="${g.g}">${g.g}. ${TABN[g.g]} <small>${n}/${g.items.length}</small></button>`}).join("")}</div>
+  <label style="margin-top:8px"><input type="checkbox" id="showall" style="width:auto" ${showAll?"checked":""}> Tampilkan juga hasil sebelumnya, kondisi awal &amp; tindakan</label>`;
+function renderDetail(){
+  const r=cur;
+  $("#app").innerHTML=`<div class="bar"><button id="back">← Daftar</button><button class="p" id="edit">Edit / input nilai</button><button id="prt">Cetak</button></div>
+  <div class="card"><b>${esc(r.gi)} — ${esc(r.bay)}</b><br><span class="ref">Tanggal ${esc(r.tanggal)} · ULTG ${esc(r.ultg)} · Merk ${esc(r.merk)||"–"} · Type ${esc(r.tipe)||"–"} · No. Dokumen ${esc(r.nodok)||"–"}</span></div>
+  ${GROUPS.map(g=>`<div class="grp">${g.g}. ${TABN[g.g]} <span class="ref">${esc(g.ref)}</span></div><div class="card scroll" style="padding:0"><table><thead><tr><th>Titik ukur</th><th>R</th><th>S</th><th>T</th><th>Kesimpulan</th></tr></thead><tbody>
+  ${g.items.map(i=>{const c=r.vals?.[i.id]||{};return `<tr><td>${esc(i.l)}${i.n?` <b>(${i.n})</b>`:""}</td>${[0,1,2].map(x=>`<td style="text-align:center">${esc(c.akhir?.[x])||"–"}</td>`).join("")}<td class="${c.kes==="Tidak baik"?"bad":c.kes==="Baik"?"ok":""}">${esc(c.kes)||"–"}</td></tr>`}).join("")}</tbody></table></div>`).join("")}
+  <div class="grp">CATATAN</div><div class="card">${esc(r.catatan).replace(/\n/g,"<br>")||"–"}</div>`;
+  $("#back").onclick=()=>{view="list";render();};
+  $("#edit").onclick=()=>{view="form";render();};
+  $("#prt").onclick=()=>doPrint(r);
+}
+function render(){view==="list"?renderList():view==="detail"?renderDetail():renderForm();}
+render();initDb();
+</script>
+</body>
+</html>

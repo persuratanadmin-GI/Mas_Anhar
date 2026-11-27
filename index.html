@@ -42,6 +42,7 @@ th{background:var(--hd);font-size:12px;text-align:center}
 .sticky{position:sticky;bottom:0;background:var(--bg);padding:10px 0;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bd);margin-top:16px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}.tabs button small{opacity:.75;margin-left:4px}
 .lite .x{display:none}
+.m td.cw{display:table-cell;white-space:nowrap}.m td.cw input{width:calc(100% - 34px);min-width:62px;display:inline-block}.c1{padding:2px 5px;font-size:12px;margin-left:2px}
 #print{display:none}
 @media print{
  #app,header{display:none!important}#print{display:block}
@@ -63,15 +64,15 @@ th{background:var(--hd);font-size:12px;text-align:center}
 /* ---------- Definisi baris (mengikuti sheet G.1.b) ---------- */
 const GROUPS=[
  {g:"A",t:"TAHANAN PENTANAHAN*",ref:"Acuan: R < 1 Ω (kondisi pentanahan terlepas dari struktur)",items:[
-  {id:"a1",l:"Tahanan pentanahan grounding PMS (Ω)"},{id:"a2",l:"Tahanan pentanahan PMS tanah (Ω)"}]},
+  {id:"a1",u:"Ω",l:"Tahanan pentanahan grounding PMS (Ω)"},{id:"a2",u:"Ω",l:"Tahanan pentanahan PMS tanah (Ω)"}]},
  {g:"B",t:"TAHANAN KONTAK*",ref:"Acuan: R ≤ 120 % nilai pabrikan atau nilai pengujian FAT / komisioning · *PMS Rel kondisional",items:[
-  {id:"b1",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b2",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"200 A"},
-  {id:"b3",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b4",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"200 A"}]},
- {g:"C",t:"TAHANAN ISOLASI*",ref:"Acuan: 1 MΩ/1 kV",items:[{id:"c1",l:"Terminal utama – body (base plate) (MΩ)"}]},
+  {id:"b1",u:"µΩ",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b2",u:"µΩ",l:"Kontak pisau-pisau (PMS posisi masuk) (Ω)",n:"200 A"},
+  {id:"b3",u:"µΩ",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"100 A"},{id:"b4",u:"µΩ",l:"Kontak klem-klem (PMS posisi masuk) (Ω)",n:"200 A"}]},
+ {g:"C",t:"TAHANAN ISOLASI*",ref:"Acuan: 1 MΩ/1 kV",items:[{id:"c1",u:"MΩ",l:"Terminal utama – body (base plate) (MΩ)"}]},
  {g:"D",t:"TEGANGAN AC/DC*",ref:"Acuan: 85 % < Vn < 110 % · IEC std 56-2 klausal 17",items:[
-  {id:"d1",l:"a. Tegangan AC di MCB lemari kontrol PMS (V)"},{id:"d2",l:"b. Tegangan DC di terminal lemari kontrol PMS (V)"}]},
+  {id:"d1",u:"V",l:"a. Tegangan AC di MCB lemari kontrol PMS (V)"},{id:"d2",u:"V",l:"b. Tegangan DC di terminal lemari kontrol PMS (V)"}]},
  {g:"E",t:"PENGUKURAN MOTOR PENGGERAK PMS*",ref:"",items:[
-  {id:"e1",l:"a. Arus running motor penggerak (A)"},{id:"e2",l:"b. Pengukuran waktu buka PMS (ms)"},{id:"e3",l:"c. Pengukuran waktu tutup PMS (ms)"}]}
+  {id:"e1",u:"A",l:"a. Arus running motor penggerak (A)"},{id:"e2",u:"ms",l:"b. Pengukuran waktu buka PMS (ms)"},{id:"e3",u:"ms",l:"c. Pengukuran waktu tutup PMS (ms)"}]}
 ];
 const ALL=GROUPS.flatMap(g=>g.items.map(i=>({...i,g:g.g})));
 const HEAD=[["ultg","ULTG*"],["gi","Lokasi GI*"],["bay","Bay*"],["tanggal","Tanggal pekerjaan*"],["nodok","No. Dokumen"],["tgldok","Tanggal dokumen"],
@@ -149,13 +150,13 @@ function renderList(){
 /* ---------- Tampilan form ---------- */
 function renderForm(){
   const r=cur;
-  const inp=(a,b,k,i)=>`<td${k==="akhir"?"":' class="x"'}><input inputmode="decimal" data-id="${a}" data-k="${k}" data-i="${i}" value="${esc(cell(r,a)[k][i])}"></td>`;
+  const inp=(a,b,k,i)=>`<td${k==="akhir"?' class="cw"':' class="x"'}><input inputmode="decimal" data-id="${a}" data-k="${k}" data-i="${i}" value="${esc(cell(r,a)[k][i])}">${k==="akhir"?`<button class="c1" data-c1="${a}|${i}" title="Upload foto untuk kolom ${"RST"[i]}">📷</button>`:""}</td>`;
   $("#app").innerHTML=`<div class="bar"><button id="back">← Daftar</button><b>${reports.some(x=>x.id===r.id)?"Edit":"Input baru"} hasil uji</b></div>
   <div class="card"><div class="grid">${HEAD.map(([k,l])=>`<div><label>${l}</label><input data-h="${k}" value="${esc(r[k])}"></div>`).join("")}</div></div>
-  ${tabsHtml()}${GROUPS.filter(g=>g.g===tab).map(g=>`<div class="grp">${g.g}. ${g.t} <span class="ref">${esc(g.ref)}</span></div>
+  ${tabsHtml()}${ocrBar()}${GROUPS.filter(g=>g.g===tab).map(g=>`<div class="grp">${g.g}. ${g.t} <span class="ref">${esc(g.ref)}</span></div>
   <div class="card scroll" style="padding:0"><table class="m ${showAll?"":"lite"}"><thead><tr><th rowspan="2">Titik ukur</th><th colspan="3" class="x">Hasil sebelumnya</th><th colspan="3" class="x">Kondisi awal</th><th rowspan="2" class="x">Tindakan</th><th colspan="3">Nilai akhir</th><th rowspan="2">Kesimpulan</th></tr>
   <tr>${"RSTRSTRST".split("").map((x,j)=>`<th class="${j<6?"x":""}">${x}</th>`).join("")}</tr></thead><tbody>
-  ${g.items.map(i=>`<tr><td class="n">${esc(i.l)}${i.n?` <b>(${i.n})</b>`:""}</td>${[0,1,2].map(x=>inp(i.id,0,"prev",x)).join("")}${[0,1,2].map(x=>inp(i.id,0,"awal",x)).join("")}
+  ${g.items.map(i=>`<tr><td class="n">${esc(i.l)}${i.n?` <b>(${i.n})</b>`:""} <button data-cam="${i.id}" title="Upload foto untuk baris ini" style="padding:2px 7px">📷</button></td>${[0,1,2].map(x=>inp(i.id,0,"prev",x)).join("")}${[0,1,2].map(x=>inp(i.id,0,"awal",x)).join("")}
   <td class="t x"><input data-id="${i.id}" data-k="tind" value="${esc(cell(r,i.id).tind)}"></td>${[0,1,2].map(x=>inp(i.id,0,"akhir",x)).join("")}
   <td class="k"><select data-id="${i.id}" data-k="kes">${KES.map(o=>`<option ${cell(r,i.id).kes===o?"selected":""}>${o}</option>`).join("")}</select></td></tr>`).join("")}
   </tbody></table></div>`).join("")}
@@ -169,8 +170,9 @@ function renderForm(){
     else if(t.id==="cat")r.catatan=t.value;
     else if(t.dataset.id){const c=cell(r,t.dataset.id);t.dataset.i!==undefined?c[t.dataset.k][+t.dataset.i]=t.value:c[t.dataset.k]=t.value;}};
   $("#back").onclick=()=>{view="list";render();};
-  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;ocrMsg="";undoSnap=null;render();});
   $("#showall").onchange=e=>{showAll=e.target.checked;render();};
+  bindOcr();
   $("#save2").onclick=async e=>{
     if(!r.gi||!r.bay||!r.tanggal){alert("Lengkapi dahulu: Lokasi GI, Bay, dan Tanggal pekerjaan.");return;}
     e.target.disabled=true;try{await save(r);const o=$("#ok");o.textContent="✓ Tersimpan online "+new Date().toLocaleTimeString("id-ID");}catch(x){alert("Gagal menyimpan: "+(x.message||x));}e.target.disabled=false;};
@@ -221,6 +223,77 @@ function renderDetail(){
   $("#edit").onclick=()=>{view="form";render();};
   $("#prt").onclick=()=>doPrint(r);
 }
+/* ---------- Upload foto -> nilai akhir terisi otomatis (OCR di browser) ---------- */
+let undoSnap=null,ocrMsg="";
+const targets=()=>GROUPS.find(g=>g.g===tab).items.flatMap(i=>[0,1,2].map(x=>({id:i.id,x})));
+const ocrBar=()=>`<div class="bar" style="margin:12px 0 0"><button class="p" id="upall">📷 Upload foto nilai</button><input type="file" id="upfile" accept="image/*" hidden><button id="undo" ${undoSnap?"":"hidden"}>↶ Urungkan</button>
+  <span id="ocrst" class="ref">${esc(ocrMsg)||(CFG.ocrUrl?"Dibaca AI. ":"⚠ Mode dasar: tidak bisa membaca layar digital 7-segmen. ")+"Angka dari foto otomatis masuk ke Nilai akhir ("+esc(TABN[tab])+"), satuan disesuaikan. Periksa hasilnya. Tombol 📷 di samping nama mengisi satu baris, tombol 📷 di dalam kolom R/S/T mengisi satu kolom itu saja."}</span></div>`;
+const loadTess=()=>window.Tesseract?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=ok;
+  s.onerror=()=>no(new Error("Mesin OCR tidak bisa dimuat (cek koneksi internet)"));document.head.appendChild(s);});
+async function prep(file){
+  const bmp=await createImageBitmap(file),k=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);
+  const g=cv.getContext("2d");g.drawImage(bmp,0,0,cv.width,cv.height);
+  const d=g.getImageData(0,0,cv.width,cv.height),p=d.data;
+  for(let i=0;i<p.length;i+=4){let v=(p[i]*.3+p[i+1]*.59+p[i+2]*.11);v=Math.max(0,Math.min(255,(v-128)*1.5+128));p[i]=p[i+1]=p[i+2]=v;}
+  g.putImageData(d,0,0);return cv;
+}
+const UNITS=[{"µΩ":1e-6,"mΩ":1e-3,"Ω":1,"kΩ":1e3,"MΩ":1e6,"GΩ":1e9,"TΩ":1e12},{"mV":1e-3,"V":1,"kV":1e3},{"µA":1e-6,"mA":1e-3,"A":1},{"µs":1e-6,"ms":1e-3,"s":1}];
+const normU=u=>String(u||"").replace(/\s/g,"").replace(/[\u03bc\u00b5u](?=[ΩAs]|\u03a9)/,"µ").replace(/\u2126/g,"Ω").replace(/ohm/i,"Ω").replace(/^m(?=Ω$)/,"m").replace(/^K/,"k");
+function conv(v,from,to){
+  const n=parseFloat(String(v).replace(",","."));from=normU(from);to=normU(to);
+  if(isNaN(n)||!from||!to||from===to)return String(v);
+  for(const g of UNITS)if(g[from]&&g[to])return String(+(n*g[from]/g[to]).toPrecision(6));
+  return String(v);
+}
+async function prepJpeg(file){
+  const bmp=await createImageBitmap(file),k=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*k);cv.height=Math.round(bmp.height*k);
+  cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);return cv.toDataURL("image/jpeg",.85).split(",")[1];
+}
+async function aiRead(file,tg,st){
+  st.textContent="Membaca foto dengan AI…";
+  const it=ALL.find(i=>i.id===tg[0].id);
+  const r=await fetch(CFG.ocrUrl,{method:"POST",headers:{"Content-Type":"application/json",apikey:CFG.supabaseKey},
+    body:JSON.stringify({image:await prepJpeg(file),hint:it.l})});
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok||j.error)throw new Error(j.error||("HTTP "+r.status));
+  return (j.readings||[]).map(x=>({v:String(x.value),u:x.unit||""}));
+}
+async function tessRead(file,st){
+  st.textContent="Menyiapkan foto…";const cv=await prep(file);
+  st.textContent="Memuat mesin pembaca (pertama kali bisa 10–30 detik)…";await loadTess();
+  const w=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")st.textContent="Membaca angka… "+Math.round(m.progress*100)+"%";}});
+  await w.setParameters({tessedit_char_whitelist:"0123456789.,",tessedit_pageseg_mode:"11"});
+  const {data}=await w.recognize(cv);await w.terminate();
+  return (data.text.match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>({v:x.replace(",","."),u:""}));
+}
+async function autoFill(file,tg){
+  const st=$("#ocrst"),btns=document.querySelectorAll("#upall,[data-cam],[data-c1]");btns.forEach(b=>b.disabled=true);
+  try{
+    const nums=CFG.ocrUrl?await aiRead(file,tg,st):await tessRead(file,st);
+    if(!nums.length){st.textContent="Tidak ada angka terdeteksi. Coba foto lebih dekat, lebih terang, dan lurus.";btns.forEach(b=>b.disabled=false);return;}
+    undoSnap=structuredClone(cur.vals);
+    const n=Math.min(nums.length,tg.length),info=[];
+    for(let i=0;i<n;i++){
+      const it=ALL.find(z=>z.id===tg[i].id),val=conv(nums[i].v,nums[i].u,it.u);
+      cell(cur,tg[i].id).akhir[tg[i].x]=val;
+      info.push(val!==nums[i].v?`${nums[i].v} ${nums[i].u} → ${val} ${it.u}`:val);
+    }
+    ocrMsg=`✓ ${n} angka terisi (${info.join("; ")})`+(nums.length>n?`; ${nums.length-n} angka lebihan diabaikan`:"")+". Periksa lalu klik Simpan nilai.";
+    render();
+  }catch(e){st.textContent="Gagal membaca foto: "+(e.message||e);btns.forEach(b=>b.disabled=false);}
+}
+function bindOcr(){
+  let pend=null;const f=$("#upfile");
+  $("#upall").onclick=()=>{pend=targets();f.click();};
+  document.querySelectorAll("[data-cam]").forEach(b=>b.onclick=()=>{pend=[0,1,2].map(x=>({id:b.dataset.cam,x}));f.click();});
+  f.onchange=()=>{const file=f.files[0];f.value="";if(file&&pend)autoFill(file,pend);};
+  document.querySelectorAll("[data-c1]").forEach(b=>b.onclick=()=>{const [id,x]=b.dataset.c1.split("|");pend=[{id,x:+x}];f.click();});
+  $("#undo").onclick=()=>{cur.vals=undoSnap;undoSnap=null;ocrMsg="Pengisian otomatis dibatalkan.";render();};
+}
+
 function render(){view==="list"?renderList():view==="detail"?renderDetail():renderForm();}
 render();initDb();
 </script>
